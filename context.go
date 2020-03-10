@@ -77,11 +77,6 @@ func (ctx *Context) Readers() []string {
 	return ctx.readers
 }
 
-// ServeFunc uses the provided HandlerFunc as a Handler
-func (ctx *Context) ServeFunc(hf HandlerFunc) error {
-	return ctx.Serve(hf)
-}
-
 // Serve cards being swiped using the provided Handler
 func (ctx *Context) Serve(h Handler) error {
 	for {
@@ -101,12 +96,21 @@ func (ctx *Context) serve(h Handler) error {
 	}
 
 	if c.uid, err = c.getUID(); err == nil {
-		h.ServeCard(c)
+		// card is presented to the reader
+		h.OnPresent(c)
 	} else {
 		return err
 	}
 
-	return ctx.waitUntilCardRelease(reader)
+	// block until card is released
+	err = ctx.waitUntilCardRelease(reader)
+	if err != nil {
+		return err
+	}
+
+	// card is released from the reader
+	// so execute onRelease func
+	return h.OnRelease(c)
 }
 
 func (ctx *Context) connect(reader string) (*card, error) {
