@@ -1,6 +1,9 @@
 package acr122u
 
-import "github.com/ebfe/scard"
+import (
+	"github.com/ebfe/scard"
+	"strings"
+)
 
 var scardEstablishContext = scard.EstablishContext
 
@@ -90,6 +93,10 @@ func (ctx *Context) serve(h Handler) error {
 		return err
 	}
 
+	if !strings.Contains(reader, "ACR") {
+		return Error{Message: "windows reader"}
+	}
+	
 	c, err := ctx.connect(reader)
 	if err != nil {
 		return err
